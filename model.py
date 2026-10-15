@@ -38,8 +38,43 @@ def gradient_check(analytic_grad, numeric_grad, tol=1e-5):
 
     return float(np.max(diff / scale, initial=0.0))
 
-# Step 3 - make_dense (not yet solved)
-# TODO: implement
+# Step 3 - make_dense
+def make_dense(in_dim, out_dim, weight_init_fn):
+    """Create a fully connected layer.
+
+    Inputs:
+      in_dim: int, input feature size
+      out_dim: int, output feature size
+      weight_init_fn: callable(in_dim, out_dim) -> (W, b)
+
+    Returns layer dict with keys:
+      params: {'W': (in_dim, out_dim), 'b': (out_dim,)}
+      forward(x) -> (y, cache) with y shape (batch, out_dim)
+      backward(dout, cache) -> (dx, grads) with grads {'W', 'b'}
+        Analytic dx/dW/db must match numerical_gradient via gradient_check.
+    """
+    W, b = weight_init_fn(in_dim, out_dim)
+    params = {'W': W, 'b': b}
+
+    def forward(x):
+        y = x @ params['W'] + params['b']
+        return y, x
+
+    def backward(dout, cache):
+        x = cache
+
+        dx = dout @ params['W'].T
+        grads = {
+            'W': x.T @ dout,
+            'b': dout.sum(axis=0),
+        }
+        return dx, grads
+
+    return {
+        'params': params,
+        'forward': forward,
+        'backward': backward,
+    }
 
 # Step 4 - make_activation (not yet solved)
 # TODO: implement
